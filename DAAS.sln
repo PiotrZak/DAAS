@@ -1,0 +1,56 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2FBBA205-2154-49A9-B412-0321813A6A34}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAAS.Domain", "src\DAAS.Domain\DAAS.Domain.csproj", "{7165D02C-B97F-4FF1-8377-817554600E2F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAAS.Application", "src\DAAS.Application\DAAS.Application.csproj", "{6E271C79-0407-4FA4-AB59-AB9963D0896E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAAS.Infrastructure", "src\DAAS.Infrastructure\DAAS.Infrastructure.csproj", "{4501BC14-5979-42A9-BB68-BD7887AE3DC3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAAS.Api", "src\DAAS.Api\DAAS.Api.csproj", "{E7AE989C-576F-4F1C-B69D-683753560194}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{EA11054C-3F66-4F2A-BF1E-61C280B2A2C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAAS.Tests", "tests\DAAS.Tests\DAAS.Tests.csproj", "{04D70D4D-3271-4C29-9684-4383C08468E0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7165D02C-B97F-4FF1-8377-817554600E2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7165D02C-B97F-4FF1-8377-817554600E2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7165D02C-B97F-4FF1-8377-817554600E2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7165D02C-B97F-4FF1-8377-817554600E2F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E271C79-0407-4FA4-AB59-AB9963D0896E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E271C79-0407-4FA4-AB59-AB9963D0896E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E271C79-0407-4FA4-AB59-AB9963D0896E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E271C79-0407-4FA4-AB59-AB9963D0896E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4501BC14-5979-42A9-BB68-BD7887AE3DC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4501BC14-5979-42A9-BB68-BD7887AE3DC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4501BC14-5979-42A9-BB68-BD7887AE3DC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4501BC14-5979-42A9-BB68-BD7887AE3DC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7AE989C-576F-4F1C-B69D-683753560194}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7AE989C-576F-4F1C-B69D-683753560194}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7AE989C-576F-4F1C-B69D-683753560194}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7AE989C-576F-4F1C-B69D-683753560194}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04D70D4D-3271-4C29-9684-4383C08468E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04D70D4D-3271-4C29-9684-4383C08468E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04D70D4D-3271-4C29-9684-4383C08468E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04D70D4D-3271-4C29-9684-4383C08468E0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7165D02C-B97F-4FF1-8377-817554600E2F} = {2FBBA205-2154-49A9-B412-0321813A6A34}
+		{6E271C79-0407-4FA4-AB59-AB9963D0896E} = {2FBBA205-2154-49A9-B412-0321813A6A34}
+		{4501BC14-5979-42A9-BB68-BD7887AE3DC3} = {2FBBA205-2154-49A9-B412-0321813A6A34}
+		{E7AE989C-576F-4F1C-B69D-683753560194} = {2FBBA205-2154-49A9-B412-0321813A6A34}
+		{04D70D4D-3271-4C29-9684-4383C08468E0} = {EA11054C-3F66-4F2A-BF1E-61C280B2A2C5}
+	EndGlobalSection
+EndGlobal

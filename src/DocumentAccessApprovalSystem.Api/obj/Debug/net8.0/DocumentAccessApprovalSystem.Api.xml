@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>DocumentAccessApprovalSystem.Api</name>
+    </assembly>
+    <members>
+        <member name="M:DocumentAccessApprovalSystem.Api.Controllers.AccessRequestsController.GetAccessRequests(System.Nullable{System.Int32},System.Boolean)">
+            <summary>
+            Get all access requests or pending requests for approvers
+            </summary>
+        </member>
+        <member name="M:DocumentAccessApprovalSystem.Api.Controllers.AccessRequestsController.CreateAccessRequest(System.Int32,DocumentAccessApprovalSystem.Application.DTOs.CreateAccessRequestDto)">
+            <summary>
+            Create a new access request
+            </summary>
+        </member>
+        <member name="M:DocumentAccessApprovalSystem.Api.Controllers.AccessRequestsController.MakeDecision(System.Int32,System.Int32,DocumentAccessApprovalSystem.Application.DTOs.CreateDecisionDto)">
+            <summary>
+            Make a decision on an access request (approve/reject)
+            </summary>
+        </member>
+        <member name="M:DocumentAccessApprovalSystem.Api.Controllers.DocumentsController.GetDocuments">
+            <summary>
+            Get all documents
+            </summary>
+        </member>
+        <member name="M:DocumentAccessApprovalSystem.Api.Controllers.DocumentsController.GetDocument(System.Int32)">
+            <summary>
+            Get document by ID
+            </summary>
+        </member>
+        <member name="M:DocumentAccessApprovalSystem.Api.Controllers.UsersController.GetUsers">
+            <summary>
+            Get all users
+            </summary>
+        </member>
+        <member name="M:DocumentAccessApprovalSystem.Api.Controllers.UsersController.GetUser(System.Int32)">
+            <summary>
+            Get user by ID
+            </summary>
+        </member>
+        <member name="M:DocumentAccessApprovalSystem.Api.Controllers.UsersController.GetUserByEmail(System.String)">
+            <summary>
+            Get user by email
+            </summary>
+        </member>
+    </members>
+</doc>

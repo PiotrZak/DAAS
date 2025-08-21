@@ -1,0 +1,12 @@
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/bin/Debug/net8.0/DocumentAccessApprovalSystem.Domain.deps.json
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/bin/Debug/net8.0/DocumentAccessApprovalSystem.Domain.dll
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/bin/Debug/net8.0/DocumentAccessApprovalSystem.Domain.pdb
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/obj/Debug/net8.0/DocumentAccessApprovalSystem.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/obj/Debug/net8.0/DocumentAccessApprovalSystem.Domain.AssemblyInfoInputs.cache
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/obj/Debug/net8.0/DocumentAccessApprovalSystem.Domain.AssemblyInfo.cs
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/obj/Debug/net8.0/DocumentAccessApprovalSystem.Domain.csproj.CoreCompileInputs.cache
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/obj/Debug/net8.0/DocumentAccessApprovalSystem.Domain.sourcelink.json
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/obj/Debug/net8.0/DocumentAccessApprovalSystem.Domain.dll
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/obj/Debug/net8.0/refint/DocumentAccessApprovalSystem.Domain.dll
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/obj/Debug/net8.0/DocumentAccessApprovalSystem.Domain.pdb
+/Users/piotrzak/Documents/Repositories/Document-Access-Approval-System/src/DocumentAccessApprovalSystem.Domain/obj/Debug/net8.0/ref/DocumentAccessApprovalSystem.Domain.dll
