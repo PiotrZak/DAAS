@@ -1,4 +1,6 @@
-using DAAS.Application.Services;
+using DAAS.Application.DTOs;
+using DAAS.Application.Handlers;
+using DAAS.Application.Queries;
 using DAAS.Domain.Entities;
 using DAAS.Domain.Interfaces;
 using FluentAssertions;
@@ -6,19 +8,17 @@ using Moq;
 
 namespace DAAS.Tests.Services;
 
-public class UserServiceTests
+public class UserQueryHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
-    private readonly UserService _service;
 
-    public UserServiceTests()
+    public UserQueryHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
-        _service = new UserService(_userRepositoryMock.Object);
     }
 
     [Fact]
-    public async Task GetAllUsersAsync_ReturnsAllUsers()
+    public async Task GetAllUsersQueryHandler_ReturnsAllUsers()
     {
         // Arrange
         var users = new List<User>
@@ -31,8 +31,11 @@ public class UserServiceTests
         _userRepositoryMock.Setup(x => x.GetAllAsync())
             .ReturnsAsync(users);
 
+        var handler = new GetAllUsersQueryHandler(_userRepositoryMock.Object);
+        var query = new GetAllUsersQuery();
+
         // Act
-        var result = await _service.GetAllUsersAsync();
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().HaveCount(3);
@@ -47,7 +50,7 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task GetUserByIdAsync_WithValidId_ReturnsUser()
+    public async Task GetUserByIdQueryHandler_WithValidId_ReturnsUser()
     {
         // Arrange
         var userId = 1;
@@ -62,8 +65,11 @@ public class UserServiceTests
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
             .ReturnsAsync(user);
 
+        var handler = new GetUserByIdQueryHandler(_userRepositoryMock.Object);
+        var query = new GetUserByIdQuery(userId);
+
         // Act
-        var result = await _service.GetUserByIdAsync(userId);
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -76,15 +82,18 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task GetUserByIdAsync_WithInvalidId_ReturnsNull()
+    public async Task GetUserByIdQueryHandler_WithInvalidId_ReturnsNull()
     {
         // Arrange
         var userId = 999;
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
             .ReturnsAsync((User?)null);
 
+        var handler = new GetUserByIdQueryHandler(_userRepositoryMock.Object);
+        var query = new GetUserByIdQuery(userId);
+
         // Act
-        var result = await _service.GetUserByIdAsync(userId);
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().BeNull();
@@ -92,55 +101,28 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task GetUserByEmailAsync_WithValidEmail_ReturnsUser()
+    public async Task GetAllUsersQueryHandler_WithEmptyRepository_ReturnsEmptyList()
     {
         // Arrange
-        var email = "test@example.com";
-        var user = new User
-        {
-            Id = 1,
-            Name = "Test User",
-            Email = email,
-            Role = UserRole.User
-        };
+        _userRepositoryMock.Setup(x => x.GetAllAsync())
+            .ReturnsAsync(new List<User>());
 
-        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email))
-            .ReturnsAsync(user);
+        var handler = new GetAllUsersQueryHandler(_userRepositoryMock.Object);
+        var query = new GetAllUsersQuery();
 
         // Act
-        var result = await _service.GetUserByEmailAsync(email);
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(1);
-        result.Name.Should().Be("Test User");
-        result.Email.Should().Be(email);
-        result.Role.Should().Be(UserRole.User);
-
-        _userRepositoryMock.Verify(x => x.GetByEmailAsync(email), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetUserByEmailAsync_WithInvalidEmail_ReturnsNull()
-    {
-        // Arrange
-        var email = "nonexistent@example.com";
-        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email))
-            .ReturnsAsync((User?)null);
-
-        // Act
-        var result = await _service.GetUserByEmailAsync(email);
-
-        // Assert
-        result.Should().BeNull();
-        _userRepositoryMock.Verify(x => x.GetByEmailAsync(email), Times.Once);
+        result.Should().BeEmpty();
+        _userRepositoryMock.Verify(x => x.GetAllAsync(), Times.Once);
     }
 
     [Theory]
     [InlineData(UserRole.User)]
     [InlineData(UserRole.Approver)]
     [InlineData(UserRole.Admin)]
-    public async Task GetUserByIdAsync_WithDifferentRoles_ReturnsCorrectRole(UserRole role)
+    public async Task GetUserByIdQueryHandler_WithDifferentRoles_ReturnsCorrectRole(UserRole role)
     {
         // Arrange
         var userId = 1;
@@ -155,12 +137,47 @@ public class UserServiceTests
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
             .ReturnsAsync(user);
 
+        var handler = new GetUserByIdQueryHandler(_userRepositoryMock.Object);
+        var query = new GetUserByIdQuery(userId);
+
         // Act
-        var result = await _service.GetUserByIdAsync(userId);
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
         result!.Role.Should().Be(role);
+        _userRepositoryMock.Verify(x => x.GetByIdAsync(userId), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetUserByIdQueryHandler_RepositoryMapping_MapsAllProperties()
+    {
+        // Arrange
+        var userId = 5;
+        var user = new User
+        {
+            Id = userId,
+            Name = "Complex User Name",
+            Email = "complex.user@example.com",
+            Role = UserRole.Approver
+        };
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
+            .ReturnsAsync(user);
+
+        var handler = new GetUserByIdQueryHandler(_userRepositoryMock.Object);
+        var query = new GetUserByIdQuery(userId);
+
+        // Act
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(userId);
+        result.Name.Should().Be("Complex User Name");
+        result.Email.Should().Be("complex.user@example.com");
+        result.Role.Should().Be(UserRole.Approver);
+
         _userRepositoryMock.Verify(x => x.GetByIdAsync(userId), Times.Once);
     }
 }

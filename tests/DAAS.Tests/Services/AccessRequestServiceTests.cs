@@ -1,44 +1,41 @@
+using DAAS.Application.Commands;
 using DAAS.Application.DTOs;
-using DAAS.Application.Services;
+using DAAS.Application.Handlers;
+using DAAS.Application.Queries;
 using DAAS.Domain.Entities;
 using DAAS.Domain.Interfaces;
 using FluentAssertions;
+using MediatR;
 using Moq;
 
 namespace DAAS.Tests.Services;
 
-public class AccessRequestServiceTests
+public class AccessRequestCommandHandlerTests
 {
     private readonly Mock<IAccessRequestRepository> _accessRequestRepositoryMock;
     private readonly Mock<IDecisionRepository> _decisionRepositoryMock;
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IDocumentRepository> _documentRepositoryMock;
-    private readonly AccessRequestService _service;
+    private readonly Mock<IMediator> _mediatorMock;
 
-    public AccessRequestServiceTests()
+    public AccessRequestCommandHandlerTests()
     {
         _accessRequestRepositoryMock = new Mock<IAccessRequestRepository>();
         _decisionRepositoryMock = new Mock<IDecisionRepository>();
         _userRepositoryMock = new Mock<IUserRepository>();
         _documentRepositoryMock = new Mock<IDocumentRepository>();
-        
-        _service = new AccessRequestService(
-            _accessRequestRepositoryMock.Object,
-            _decisionRepositoryMock.Object,
-            _userRepositoryMock.Object,
-            _documentRepositoryMock.Object
-        );
+        _mediatorMock = new Mock<IMediator>();
     }
 
     [Fact]
-    public async Task CreateAccessRequestAsync_WithValidData_CreatesAccessRequest()
+    public async Task CreateAccessRequestCommandHandler_WithValidData_CreatesAccessRequest()
     {
         // Arrange
         var userId = 1;
         var user = new User { Id = userId, Name = "Test User", Email = "test@example.com", Role = UserRole.User };
         var documentId = 1;
         var document = new Document { Id = documentId, Title = "Test Document", Description = "Test Description", CreatedAt = DateTime.UtcNow };
-        var createDto = new CreateAccessRequestDto(documentId, "Need access for testing", AccessType.Read);
+        var command = new CreateAccessRequestCommand(userId, documentId, "Need access for testing", AccessType.Read);
 
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
             .ReturnsAsync(user);
@@ -51,8 +48,8 @@ public class AccessRequestServiceTests
             Id = 1,
             UserId = userId,
             DocumentId = documentId,
-            Reason = createDto.Reason,
-            AccessType = createDto.AccessType,
+            Reason = command.Reason,
+            AccessType = command.AccessType,
             Status = RequestStatus.Pending,
             RequestedAt = DateTime.UtcNow,
             User = user,
@@ -62,15 +59,20 @@ public class AccessRequestServiceTests
         _accessRequestRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<AccessRequest>()))
             .ReturnsAsync(expectedAccessRequest);
 
+        var handler = new CreateAccessRequestCommandHandler(
+            _accessRequestRepositoryMock.Object,
+            _userRepositoryMock.Object,
+            _documentRepositoryMock.Object);
+
         // Act
-        var result = await _service.CreateAccessRequestAsync(userId, createDto);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
         result.UserId.Should().Be(userId);
         result.DocumentId.Should().Be(documentId);
-        result.Reason.Should().Be(createDto.Reason);
-        result.AccessType.Should().Be(createDto.AccessType);
+        result.Reason.Should().Be(command.Reason);
+        result.AccessType.Should().Be(command.AccessType);
         result.Status.Should().Be(RequestStatus.Pending);
         result.UserName.Should().Be(user.Name);
         result.DocumentTitle.Should().Be(document.Title);
@@ -78,23 +80,28 @@ public class AccessRequestServiceTests
         _accessRequestRepositoryMock.Verify(x => x.CreateAsync(It.Is<AccessRequest>(ar => 
             ar.UserId == userId &&
             ar.DocumentId == documentId &&
-            ar.Reason == createDto.Reason &&
-            ar.AccessType == createDto.AccessType &&
+            ar.Reason == command.Reason &&
+            ar.AccessType == command.AccessType &&
             ar.Status == RequestStatus.Pending)), Times.Once);
     }
 
     [Fact]
-    public async Task CreateAccessRequestAsync_WithInvalidUser_ThrowsArgumentException()
+    public async Task CreateAccessRequestCommandHandler_WithInvalidUser_ThrowsArgumentException()
     {
         // Arrange
         var userId = 999;
-        var createDto = new CreateAccessRequestDto(1, "Need access", AccessType.Read);
+        var command = new CreateAccessRequestCommand(userId, 1, "Need access", AccessType.Read);
 
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
             .ReturnsAsync((User?)null);
 
+        var handler = new CreateAccessRequestCommandHandler(
+            _accessRequestRepositoryMock.Object,
+            _userRepositoryMock.Object,
+            _documentRepositoryMock.Object);
+
         // Act & Assert
-        await FluentActions.Invoking(() => _service.CreateAccessRequestAsync(userId, createDto))
+        await FluentActions.Invoking(() => handler.Handle(command, CancellationToken.None))
             .Should().ThrowAsync<ArgumentException>()
             .WithMessage("User not found*");
 
@@ -102,7 +109,35 @@ public class AccessRequestServiceTests
     }
 
     [Fact]
-    public async Task MakeDecisionAsync_WithValidApproval_ApprovesRequest()
+    public async Task CreateAccessRequestCommandHandler_WithInvalidDocument_ThrowsArgumentException()
+    {
+        // Arrange
+        var userId = 1;
+        var documentId = 999;
+        var user = new User { Id = userId, Name = "Test User", Email = "test@example.com", Role = UserRole.User };
+        var command = new CreateAccessRequestCommand(userId, documentId, "Need access", AccessType.Read);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
+            .ReturnsAsync(user);
+
+        _documentRepositoryMock.Setup(x => x.GetByIdAsync(documentId))
+            .ReturnsAsync((Document?)null);
+
+        var handler = new CreateAccessRequestCommandHandler(
+            _accessRequestRepositoryMock.Object,
+            _userRepositoryMock.Object,
+            _documentRepositoryMock.Object);
+
+        // Act & Assert
+        await FluentActions.Invoking(() => handler.Handle(command, CancellationToken.None))
+            .Should().ThrowAsync<ArgumentException>()
+            .WithMessage("Document not found*");
+
+        _accessRequestRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<AccessRequest>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ApproveAccessRequestCommandHandler_WithValidApproval_ApprovesRequest()
     {
         // Arrange
         var requestId = 1;
@@ -121,7 +156,7 @@ public class AccessRequestServiceTests
             Document = new Document { Id = 1, Title = "Document", Description = "Test doc", CreatedAt = DateTime.UtcNow }
         };
 
-        var decisionDto = new CreateDecisionDto(true, "Access granted for testing");
+        var command = new ApproveAccessRequestCommand(requestId, approverId, true, "Access granted for testing");
 
         _accessRequestRepositoryMock.Setup(x => x.GetByIdAsync(requestId))
             .ReturnsAsync(accessRequest);
@@ -135,7 +170,7 @@ public class AccessRequestServiceTests
             AccessRequestId = requestId,
             ApproverId = approverId,
             IsApproved = true,
-            Comment = decisionDto.Comment,
+            Comment = command.Comment,
             DecidedAt = DateTime.UtcNow,
             Approver = approver
         };
@@ -150,7 +185,7 @@ public class AccessRequestServiceTests
             DocumentId = 1,
             Reason = "Test reason",
             AccessType = AccessType.Read,
-            Status = RequestStatus.Approved, // Updated status
+            Status = RequestStatus.Approved,
             RequestedAt = DateTime.UtcNow,
             User = new User { Id = 1, Name = "User", Email = "user@example.com", Role = UserRole.User },
             Document = new Document { Id = 1, Title = "Document", Description = "Test doc", CreatedAt = DateTime.UtcNow },
@@ -160,29 +195,37 @@ public class AccessRequestServiceTests
         _accessRequestRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<AccessRequest>()))
             .ReturnsAsync(updatedAccessRequest);
 
+        var handler = new ApproveAccessRequestCommandHandler(
+            _accessRequestRepositoryMock.Object,
+            _decisionRepositoryMock.Object,
+            _userRepositoryMock.Object,
+            _mediatorMock.Object);
+
         // Act
-        var result = await _service.MakeDecisionAsync(requestId, approverId, decisionDto);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
         result.Status.Should().Be(RequestStatus.Approved);
         result.Decision.Should().NotBeNull();
         result.Decision!.IsApproved.Should().BeTrue();
-        result.Decision.Comment.Should().Be(decisionDto.Comment);
+        result.Decision.Comment.Should().Be(command.Comment);
         result.Decision.ApproverName.Should().Be(approver.Name);
 
         _decisionRepositoryMock.Verify(x => x.CreateAsync(It.Is<Decision>(d => 
             d.AccessRequestId == requestId &&
             d.ApproverId == approverId &&
             d.IsApproved == true &&
-            d.Comment == decisionDto.Comment)), Times.Once);
+            d.Comment == command.Comment)), Times.Once);
 
         _accessRequestRepositoryMock.Verify(x => x.UpdateAsync(It.Is<AccessRequest>(ar => 
             ar.Id == requestId && ar.Status == RequestStatus.Approved)), Times.Once);
+
+        _mediatorMock.Verify(x => x.Publish(It.IsAny<AccessRequestDecisionMadeEvent>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task MakeDecisionAsync_WithNonApprover_ThrowsUnauthorizedAccessException()
+    public async Task ApproveAccessRequestCommandHandler_WithNonApprover_ThrowsInvalidOperationException()
     {
         // Arrange
         var requestId = 1;
@@ -194,7 +237,7 @@ public class AccessRequestServiceTests
             Status = RequestStatus.Pending
         };
 
-        var decisionDto = new CreateDecisionDto(true, "Trying to approve");
+        var command = new ApproveAccessRequestCommand(requestId, userId, true, "Trying to approve");
 
         _accessRequestRepositoryMock.Setup(x => x.GetByIdAsync(requestId))
             .ReturnsAsync(accessRequest);
@@ -202,9 +245,15 @@ public class AccessRequestServiceTests
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
             .ReturnsAsync(user);
 
+        var handler = new ApproveAccessRequestCommandHandler(
+            _accessRequestRepositoryMock.Object,
+            _decisionRepositoryMock.Object,
+            _userRepositoryMock.Object,
+            _mediatorMock.Object);
+
         // Act & Assert
-        await FluentActions.Invoking(() => _service.MakeDecisionAsync(requestId, userId, decisionDto))
-            .Should().ThrowAsync<UnauthorizedAccessException>()
+        await FluentActions.Invoking(() => handler.Handle(command, CancellationToken.None))
+            .Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("User is not authorized to approve requests");
 
         _decisionRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Decision>()), Times.Never);
@@ -212,7 +261,7 @@ public class AccessRequestServiceTests
     }
 
     [Fact]
-    public async Task MakeDecisionAsync_WithAlreadyDecidedRequest_ThrowsInvalidOperationException()
+    public async Task ApproveAccessRequestCommandHandler_WithAlreadyDecidedRequest_ThrowsInvalidOperationException()
     {
         // Arrange
         var requestId = 1;
@@ -224,7 +273,7 @@ public class AccessRequestServiceTests
             Status = RequestStatus.Approved // Already decided
         };
 
-        var decisionDto = new CreateDecisionDto(false, "Trying to change decision");
+        var command = new ApproveAccessRequestCommand(requestId, approverId, false, "Trying to change decision");
 
         _accessRequestRepositoryMock.Setup(x => x.GetByIdAsync(requestId))
             .ReturnsAsync(accessRequest);
@@ -232,17 +281,33 @@ public class AccessRequestServiceTests
         _userRepositoryMock.Setup(x => x.GetByIdAsync(approverId))
             .ReturnsAsync(approver);
 
+        var handler = new ApproveAccessRequestCommandHandler(
+            _accessRequestRepositoryMock.Object,
+            _decisionRepositoryMock.Object,
+            _userRepositoryMock.Object,
+            _mediatorMock.Object);
+
         // Act & Assert
-        await FluentActions.Invoking(() => _service.MakeDecisionAsync(requestId, approverId, decisionDto))
+        await FluentActions.Invoking(() => handler.Handle(command, CancellationToken.None))
             .Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Request has already been decided");
+            .WithMessage("Access request is not in pending status");
 
         _decisionRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<Decision>()), Times.Never);
         _accessRequestRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<AccessRequest>()), Times.Never);
     }
+}
+
+public class AccessRequestQueryHandlerTests
+{
+    private readonly Mock<IAccessRequestRepository> _accessRequestRepositoryMock;
+
+    public AccessRequestQueryHandlerTests()
+    {
+        _accessRequestRepositoryMock = new Mock<IAccessRequestRepository>();
+    }
 
     [Fact]
-    public async Task GetPendingRequestsAsync_ReturnsPendingRequestsOnly()
+    public async Task GetPendingAccessRequestsQueryHandler_ReturnsPendingRequestsOnly()
     {
         // Arrange
         var pendingRequests = new List<AccessRequest>
@@ -270,13 +335,91 @@ public class AccessRequestServiceTests
         _accessRequestRepositoryMock.Setup(x => x.GetPendingRequestsAsync())
             .ReturnsAsync(pendingRequests);
 
+        var handler = new GetPendingAccessRequestsQueryHandler(_accessRequestRepositoryMock.Object);
+        var query = new GetPendingAccessRequestsQuery();
+
         // Act
-        var result = await _service.GetPendingRequestsAsync();
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().HaveCount(2);
         result.Should().OnlyContain(r => r.Status == RequestStatus.Pending);
         
         _accessRequestRepositoryMock.Verify(x => x.GetPendingRequestsAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAllAccessRequestsQueryHandler_ReturnsAllRequests()
+    {
+        // Arrange
+        var requests = new List<AccessRequest>
+        {
+            new()
+            {
+                Id = 1,
+                UserId = 1,
+                DocumentId = 1,
+                Status = RequestStatus.Pending,
+                User = new User { Name = "User1" },
+                Document = new Document { Title = "Doc1" }
+            },
+            new()
+            {
+                Id = 2,
+                UserId = 2,
+                DocumentId = 2,
+                Status = RequestStatus.Approved,
+                User = new User { Name = "User2" },
+                Document = new Document { Title = "Doc2" }
+            }
+        };
+
+        _accessRequestRepositoryMock.Setup(x => x.GetAllAsync())
+            .ReturnsAsync(requests);
+
+        var handler = new GetAllAccessRequestsQueryHandler(_accessRequestRepositoryMock.Object);
+        var query = new GetAllAccessRequestsQuery();
+
+        // Act
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Should().HaveCount(2);
+        
+        _accessRequestRepositoryMock.Verify(x => x.GetAllAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetUserAccessRequestsQueryHandler_ReturnsUserRequests()
+    {
+        // Arrange
+        var userId = 1;
+        var userRequests = new List<AccessRequest>
+        {
+            new()
+            {
+                Id = 1,
+                UserId = userId,
+                DocumentId = 1,
+                Status = RequestStatus.Pending,
+                User = new User { Name = "User1" },
+                Document = new Document { Title = "Doc1" }
+            }
+        };
+
+        _accessRequestRepositoryMock.Setup(x => x.GetByUserIdAsync(userId))
+            .ReturnsAsync(userRequests);
+
+        var handler = new GetUserAccessRequestsQueryHandler(_accessRequestRepositoryMock.Object);
+        var query = new GetUserAccessRequestsQuery(userId);
+
+        // Act
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.First().UserId.Should().Be(userId);
+        
+        _accessRequestRepositoryMock.Verify(x => x.GetByUserIdAsync(userId), Times.Once);
     }
 }

@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../buildMultiTargeting/DocumentAccessApprovalSystem.Api.props" />
-</Project>

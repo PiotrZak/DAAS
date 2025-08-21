@@ -1,4 +1,6 @@
-using DAAS.Application.Services;
+using DAAS.Application.DTOs;
+using DAAS.Application.Handlers;
+using DAAS.Application.Queries;
 using DAAS.Domain.Entities;
 using DAAS.Domain.Interfaces;
 using FluentAssertions;
@@ -6,19 +8,17 @@ using Moq;
 
 namespace DAAS.Tests.Services;
 
-public class DocumentServiceTests
+public class DocumentQueryHandlerTests
 {
     private readonly Mock<IDocumentRepository> _documentRepositoryMock;
-    private readonly DocumentService _service;
 
-    public DocumentServiceTests()
+    public DocumentQueryHandlerTests()
     {
         _documentRepositoryMock = new Mock<IDocumentRepository>();
-        _service = new DocumentService(_documentRepositoryMock.Object);
     }
 
     [Fact]
-    public async Task GetAllDocumentsAsync_ReturnsAllDocuments()
+    public async Task GetAllDocumentsQueryHandler_ReturnsAllDocuments()
     {
         // Arrange
         var documents = new List<Document>
@@ -49,8 +49,11 @@ public class DocumentServiceTests
         _documentRepositoryMock.Setup(x => x.GetAllAsync())
             .ReturnsAsync(documents);
 
+        var handler = new GetAllDocumentsQueryHandler(_documentRepositoryMock.Object);
+        var query = new GetAllDocumentsQuery();
+
         // Act
-        var result = await _service.GetAllDocumentsAsync();
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().HaveCount(3);
@@ -64,7 +67,7 @@ public class DocumentServiceTests
     }
 
     [Fact]
-    public async Task GetDocumentByIdAsync_WithValidId_ReturnsDocument()
+    public async Task GetDocumentByIdQueryHandler_WithValidId_ReturnsDocument()
     {
         // Arrange
         var documentId = 1;
@@ -79,8 +82,11 @@ public class DocumentServiceTests
         _documentRepositoryMock.Setup(x => x.GetByIdAsync(documentId))
             .ReturnsAsync(document);
 
+        var handler = new GetDocumentByIdQueryHandler(_documentRepositoryMock.Object);
+        var query = new GetDocumentByIdQuery(documentId);
+
         // Act
-        var result = await _service.GetDocumentByIdAsync(documentId);
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -93,15 +99,18 @@ public class DocumentServiceTests
     }
 
     [Fact]
-    public async Task GetDocumentByIdAsync_WithInvalidId_ReturnsNull()
+    public async Task GetDocumentByIdQueryHandler_WithInvalidId_ReturnsNull()
     {
         // Arrange
         var documentId = 999;
         _documentRepositoryMock.Setup(x => x.GetByIdAsync(documentId))
             .ReturnsAsync((Document?)null);
 
+        var handler = new GetDocumentByIdQueryHandler(_documentRepositoryMock.Object);
+        var query = new GetDocumentByIdQuery(documentId);
+
         // Act
-        var result = await _service.GetDocumentByIdAsync(documentId);
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().BeNull();
@@ -109,14 +118,17 @@ public class DocumentServiceTests
     }
 
     [Fact]
-    public async Task GetAllDocumentsAsync_WithEmptyRepository_ReturnsEmptyList()
+    public async Task GetAllDocumentsQueryHandler_WithEmptyRepository_ReturnsEmptyList()
     {
         // Arrange
         _documentRepositoryMock.Setup(x => x.GetAllAsync())
             .ReturnsAsync(new List<Document>());
 
+        var handler = new GetAllDocumentsQueryHandler(_documentRepositoryMock.Object);
+        var query = new GetAllDocumentsQuery();
+
         // Act
-        var result = await _service.GetAllDocumentsAsync();
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().BeEmpty();
@@ -124,7 +136,7 @@ public class DocumentServiceTests
     }
 
     [Fact]
-    public async Task GetDocumentByIdAsync_RepositoryMapping_MapsAllProperties()
+    public async Task GetDocumentByIdQueryHandler_RepositoryMapping_MapsAllProperties()
     {
         // Arrange
         var documentId = 5;
@@ -140,8 +152,11 @@ public class DocumentServiceTests
         _documentRepositoryMock.Setup(x => x.GetByIdAsync(documentId))
             .ReturnsAsync(document);
 
+        var handler = new GetDocumentByIdQueryHandler(_documentRepositoryMock.Object);
+        var query = new GetDocumentByIdQuery(documentId);
+
         // Act
-        var result = await _service.GetDocumentByIdAsync(documentId);
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -157,7 +172,7 @@ public class DocumentServiceTests
     [InlineData(1, "Doc1", "Desc1")]
     [InlineData(100, "Document with ID 100", "Long description")]
     [InlineData(999, "Final Document", "Last description")]
-    public async Task GetDocumentByIdAsync_WithVariousDocuments_ReturnsCorrectDocument(int id, string title, string description)
+    public async Task GetDocumentByIdQueryHandler_WithVariousDocuments_ReturnsCorrectDocument(int id, string title, string description)
     {
         // Arrange
         var document = new Document
@@ -171,8 +186,11 @@ public class DocumentServiceTests
         _documentRepositoryMock.Setup(x => x.GetByIdAsync(id))
             .ReturnsAsync(document);
 
+        var handler = new GetDocumentByIdQueryHandler(_documentRepositoryMock.Object);
+        var query = new GetDocumentByIdQuery(id);
+
         // Act
-        var result = await _service.GetDocumentByIdAsync(id);
+        var result = await handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
